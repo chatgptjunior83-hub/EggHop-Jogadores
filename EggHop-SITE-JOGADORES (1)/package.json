@@ -1,0 +1,1 @@
+{"name":"egghop-jogadores","private":true,"version":"2.0.0","type":"module","scripts":{"test":"node scripts/check.mjs"},"dependencies":{"@netlify/blobs":"^11.1.0"}}
