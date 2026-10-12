@@ -87,9 +87,9 @@
     const controller=new AbortController();state.request=controller;
     const timeout=setTimeout(()=>controller.abort(),17000);
     try {
-      const response=await fetch(`${API_URL}&${params.toString()}`,{signal:controller.signal,headers:{Accept:'application/json'}});
+      const response=await fetch(`${API_URL}&${params.toString()}`,{signal:controller.signal,credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json'}});
       const body=await response.json().catch(()=>({}));
-      if(response.status === 401 || response.status === 403) { window.dispatchEvent(new Event('egghop:lock')); throw new Error('Sua sessão não tem acesso. Entre novamente.'); }
+      if(response.status === 401 || response.status === 403) { throw new Error(body.error || 'A consulta aos servidores foi recusada. Seu acesso ao site continuará sendo verificado separadamente.'); }
       if(!response.ok){throw new Error(body.error||`Não foi possível consultar o Roblox (${response.status}).`);}
       if(!Array.isArray(body.data))throw new Error('Resposta inesperada da consulta de servidores.');
       for(const item of body.data){
@@ -104,7 +104,7 @@
       if(!state.servers.length){state.fetched=false;state.loadError=true;}
       const message=err.name==='AbortError'?'A consulta demorou demais. Tente atualizar.':err.message;
       say(message+' Se continuar, tente novamente mais tarde.','error');
-      if(!state.servers.length)toast('Falha na consulta. Verifique se o site foi publicado com a função da Netlify.');
+      if(!state.servers.length)toast(message);
     }finally{clearTimeout(timeout);state.loading=false;state.request=null;render();}
   }
   function registerVisit(id){
