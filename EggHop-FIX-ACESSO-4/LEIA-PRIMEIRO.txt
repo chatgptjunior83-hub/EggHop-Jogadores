@@ -1,0 +1,14 @@
+EggHop - CORRECAO DO PISCA-PISCA 4.0
+
+ATUALIZE APENAS O ARQUIVO ATIVO DO SITE:
+GitHub > EggHop-Jogadores > EggHop-SITE-JOGADORES (1) > public > access.js
+
+1. Abra access.js do projeto principal (NAO o de uma pasta de ZIP de correcoes).
+2. Clique no lapis para editar. Selecione todo o codigo antigo, cole o novo access.js e clique em Commit changes.
+3. Aguarde o deploy da Netlify ficar Published.
+4. Abra https://sitehopjogador.netlify.app/access.js e procure por acesso-estavel-4.0 para garantir que o arquivo novo chegou ao site.
+5. Atualize o site com Ctrl+Shift+R e observe por 30 segundos.
+
+Nao altere a senha, as variaveis, o painel admin, ou app.js.
+Esta atualizacao remove a alternancia causada por falhas temporarias e pelo evento egghop:lock; ela nao conserta por si so a consulta de servidores Roblox.
+O backend Netlify continua responsavel pela permissao real.
