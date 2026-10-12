@@ -1,7 +1,7 @@
 (() => {
   'use strict';
   const PLACE_ID = '107778070777162';
-  const API_URL = '/api/servers';
+  const API_URL = '/.netlify/functions/api?route=servers';
   const $ = (id) => document.getElementById(id);
   const els = {
     minSlots:$('minSlots'), playerCount:$('playerCount'), sortBy:$('sortBy'),
@@ -87,7 +87,7 @@
     const controller=new AbortController();state.request=controller;
     const timeout=setTimeout(()=>controller.abort(),17000);
     try {
-      const response=await fetch(`${API_URL}?${params.toString()}`,{signal:controller.signal,headers:{Accept:'application/json'}});
+      const response=await fetch(`${API_URL}&${params.toString()}`,{signal:controller.signal,headers:{Accept:'application/json'}});
       const body=await response.json().catch(()=>({}));
       if(response.status === 401 || response.status === 403) { window.dispatchEvent(new Event('egghop:lock')); throw new Error('Sua sessão não tem acesso. Entre novamente.'); }
       if(!response.ok){throw new Error(body.error||`Não foi possível consultar o Roblox (${response.status}).`);}
