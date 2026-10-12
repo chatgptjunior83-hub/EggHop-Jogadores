@@ -1,141 +1,136 @@
-/* EggHop - acesso estavel 4.0
-   A API da Netlify continua sendo a autoridade sobre quem pode acessar.
-   Uma falha temporaria da rede ou da consulta de servidores nao deve
-   derrubar a tela de um usuario ja aprovado.
-*/
+/* EggHop - correcao de tela piscando V5
+ * O frontend nunca confunde erro da busca de servidores com revogacao de acesso.
+ * A API de acesso continua exigindo a sessao aprovada.
+ */
 (() => {
   'use strict';
-  window.EGGHOP_FIX_VERSION = 'acesso-estavel-4.0';
-
+  window.EGGHOP_ACCESS_VERSION = 'egghop-fix-v5';
   const $ = (id) => document.getElementById(id);
-  const panels = ['gateLoading', 'requestForm', 'pendingPanel', 'blockedPanel', 'configPanel'];
+  const panels = ['gateLoading','requestForm','pendingPanel','blockedPanel','configPanel'];
   const API = '/.netlify/functions/api?route=';
-  let currentStatus = 'checking';
-  let currentNick = '';
-  let currentCode = '';
-  let statusPromise = null;
-  let lastCheckAt = 0;
-  let tentativeRevocation = null;
+  let status = 'checking';
+  let nick = '';
+  let code = '';
+  let activeCheck = null;
+  let missingCount = 0;
+  let lastMismatch = 0;
+  let approvalEventFired = false;
 
-  function show(id) {
-    for (const name of panels) {
-      const panel = $(name);
-      if (panel) panel.hidden = name !== id;
+  function showPanel(id) {
+    for (const panel of panels) {
+      const node = $(panel);
+      if (node) node.hidden = panel !== id;
     }
   }
-
   function message(text, ok = false) {
-    const notice = $('accessNotice');
-    if (!notice) return;
-    notice.textContent = text;
-    notice.className = 'access-notice' + (ok ? ' good' : '');
+    const node = $('accessNotice');
+    if (!node) return;
+    node.textContent = text;
+    node.className = 'access-notice' + (ok ? ' good' : '');
   }
-
-  function unlock(nick) {
+  function showApproved(userNick) {
+    const previouslyApproved = status === 'approved' && approvalEventFired;
     const gate = $('accessGate');
-    const wasLocked = !gate.hidden || document.body.classList.contains('is-locked');
+    status = 'approved';
+    nick = String(userNick || nick);
+    missingCount = 0;
+    lastMismatch = 0;
     gate.hidden = true;
     document.body.classList.remove('is-locked');
     $('accountBar').hidden = false;
     $('activeAccount').textContent = nick;
-    // Consultar servidores somente na primeira liberacao, e nao em cada polling.
-    if (wasLocked) window.eggHopUnlock?.();
+    if (!previouslyApproved) {
+      approvalEventFired = true;
+      // Esta funcao carrega os servidores UMA UNICA VEZ por liberacao.
+      window.eggHopUnlock?.();
+    }
   }
-
-  function lock() {
-    const gate = $('accessGate');
-    const wasUnlocked = gate.hidden && !document.body.classList.contains('is-locked');
+  function showLocked() {
+    const wasVisible = !$('accessGate').hidden;
+    status = 'locked';
     document.body.classList.add('is-locked');
-    gate.hidden = false;
+    $('accessGate').hidden = false;
     $('accountBar').hidden = true;
-    if (wasUnlocked) window.eggHopClear?.();
+    if (!wasVisible || approvalEventFired) window.eggHopClear?.();
+    approvalEventFired = false;
   }
-
-  async function api(endpoint, options = {}) {
+  async function api(route, options = {}) {
     let response;
     try {
-      response = await fetch(API + encodeURIComponent(endpoint), {
-        credentials: 'same-origin',
-        cache: 'no-store',
-        headers: {
-          Accept: 'application/json',
-          ...(options.body ? { 'Content-Type': 'application/json' } : {})
-        },
+      response = await fetch(API + encodeURIComponent(route), {
+        credentials: 'same-origin', cache: 'no-store',
+        headers: {Accept:'application/json', ...(options.body ? {'Content-Type':'application/json'} : {})},
         ...options
       });
-    } catch {
-      throw new Error('Sem conexao. Confira sua internet.');
+    } catch (error) {
+      throw new Error('Sem conexao. Verifique sua internet.');
     }
-    const body = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(body.error || `Erro na verificacao (${response.status}).`);
-    return body;
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(result.error || 'Erro na verificacao (' + response.status + ').');
+    return result;
   }
-
-  function draw(result) {
-    const next = result && typeof result.status === 'string' ? result.status : 'new';
-
+  function apply(data) {
+    const next = typeof data?.status === 'string' ? data.status : 'invalid';
     if (next === 'approved') {
-      tentativeRevocation = null;
-      currentStatus = 'approved';
-      currentNick = String(result.nick || currentNick);
-      unlock(currentNick);
+      showApproved(data.nick);
+      message('');
       return;
     }
-
-    // Um status 'new'/'pending' isolado depois de aprovado pode ocorrer
-    // quando ha uma falha transitoria de sessao. Peça uma segunda confirmacao.
-    // Um bloqueio explicito do administrador e aplicado imediatamente.
-    if (currentStatus === 'approved' && next !== 'blocked') {
-      if (!tentativeRevocation || tentativeRevocation.status !== next) {
-        tentativeRevocation = { status: next, at: Date.now() };
-        return;
-      }
-      if (Date.now() - tentativeRevocation.at < 2500) return;
+    if (next === 'blocked') {
+      // Bloqueio real confirmado pela API: manter a seguranca.
+      showLocked();
+      status = 'blocked';
+      showPanel('blockedPanel');
+      return;
     }
-
-    tentativeRevocation = null;
-    currentStatus = next;
-    lock();
+    if (status === 'approved') {
+      // Se o status oscilar momentaneamente entre new/pending e approved,
+      // nao fazemos o navegador piscar. Uma revogacao permanente de sessao
+      // exige 3 respostas consecutivas separadas por tempo; o backend
+      // sempre protege os dados do Server Hop durante esse intervalo.
+      const now = Date.now();
+      if (lastMismatch && now - lastMismatch < 4000) return;
+      lastMismatch = now;
+      missingCount++;
+      console.warn('[EggHop V5] Verificacao inconsistente:', next, '(' + missingCount + '/3)');
+      if (missingCount < 3) return;
+    }
+    showLocked();
+    status = next;
     if (next === 'pending') {
-      currentNick = String(result.nick || '');
-      currentCode = String(result.code || '');
-      $('pendingNick').textContent = currentNick;
-      $('pendingCode').textContent = currentCode;
-      show('pendingPanel');
-    } else if (next === 'blocked') {
-      show('blockedPanel');
+      nick = String(data.nick || '');
+      code = String(data.code || '');
+      $('pendingNick').textContent = nick;
+      $('pendingCode').textContent = code;
+      showPanel('pendingPanel');
+    } else if (next === 'new') {
+      showPanel('requestForm');
     } else {
-      show('requestForm');
+      showPanel('configPanel');
+      message('Resposta inesperada da verificacao. Tente atualizar.');
     }
   }
-
-  function checkStatus() {
-    // Impede requisicoes concorrentes que poderiam chegar fora de ordem.
-    if (statusPromise) return statusPromise;
-    lastCheckAt = Date.now();
-    statusPromise = (async () => {
-      try {
-        const data = await api('status');
-        draw(data);
-        if (currentStatus !== 'approved') message('');
-      } catch (error) {
-        if (currentStatus === 'approved') {
-          // Mantenha a interface visivel, mas nunca contorne a validacao do backend.
-          console.warn('[EggHop] Falha temporaria de acesso:', error.message);
-        } else {
-          lock();
-          show('configPanel');
-          message(error.message);
+  function check() {
+    if (activeCheck) return activeCheck;
+    activeCheck = api('status')
+      .then(apply)
+      .catch((err) => {
+        console.warn('[EggHop V5] Falha de verificacao:', err.message);
+        // Se ja estava autorizado, a interface permanece estavel.
+        // A consulta a servidores segue protegida pela API no servidor.
+        if (status !== 'approved') {
+          showLocked();
+          showPanel('configPanel');
+          message(err.message);
         }
-      }
-    })().finally(() => { statusPromise = null; });
-    return statusPromise;
+      })
+      .finally(() => { activeCheck = null; });
+    return activeCheck;
   }
-
   $('requestForm').addEventListener('submit', async (event) => {
     event.preventDefault();
-    const nick = $('robloxNick').value.trim();
-    if (!/^[A-Za-z0-9_]{3,20}$/.test(nick)) {
+    const requestedNick = $('robloxNick').value.trim();
+    if (!/^[A-Za-z0-9_]{3,20}$/.test(requestedNick)) {
       message('Digite um nick valido (3 a 20 letras, numeros ou _).');
       return;
     }
@@ -143,39 +138,27 @@
     button.disabled = true;
     message('Enviando pedido...');
     try {
-      const data = await api('request', {method: 'POST', body: JSON.stringify({nick})});
-      draw(data);
+      const data = await api('request', {method:'POST',body:JSON.stringify({nick:requestedNick})});
+      apply(data);
       message('Pedido enviado! Envie seu codigo pelo TikTok.', true);
-    } catch (error) {
-      message(error.message);
-    } finally {
-      button.disabled = false;
-    }
+    } catch(err) { message(err.message); }
+    finally { button.disabled = false; }
   });
-
   $('copyPending').addEventListener('click', async () => {
-    const text = `Meu nick no Roblox: ${currentNick}\nCodigo EggHop: ${currentCode}`;
-    try {
-      await navigator.clipboard.writeText(text);
-      message('Copiado! Envie ao dono pelo TikTok.', true);
-    } catch {
-      message('Copie manualmente o nick e o codigo acima.');
-    }
+    const text = `Meu nick no Roblox: ${nick}\nCodigo EggHop: ${code}`;
+    try { await navigator.clipboard.writeText(text); message('Copiado! Envie ao dono pelo TikTok.',true); }
+    catch { message('Copie manualmente o nick e o codigo acima.'); }
   });
+  $('manualRefresh').addEventListener('click', check);
+  $('accessExit').addEventListener('click', () => alert('Seu acesso e vinculado a este navegador. Nao apague seus cookies. Para revogar o acesso, fale com o administrador.'));
 
-  $('manualRefresh').addEventListener('click', checkStatus);
-  $('accessExit').addEventListener('click', () => alert(
-    'Seu acesso esta vinculado a este navegador. Nao apague os cookies. Para desvincular, fale com o administrador pelo TikTok.'
-  ));
-
-  // O app de servidores pode disparar este evento quando a consulta falha.
-  // NUNCA esconda a interface aqui. Apenas confirme o status com a API.
+  // O app de servidores nunca pode bloquear a interface por erro de busca.
+  // Compatibilidade com versoes antigas que ainda disparam este evento:
   window.addEventListener('egghop:lock', () => {
-    if (Date.now() - lastCheckAt > 2000) checkStatus();
+    console.warn('[EggHop V5] Evento antigo ignorado; acesso verificado separadamente.');
   });
-
   setInterval(() => {
-    if (currentStatus === 'pending' || currentStatus === 'approved') checkStatus();
+    if (status === 'approved' || status === 'pending') check();
   }, 12000);
-  checkStatus();
+  check();
 })();
