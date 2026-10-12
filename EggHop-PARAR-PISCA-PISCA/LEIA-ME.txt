@@ -1,0 +1,13 @@
+EGGHOP — CORRECAO DO PISCA-PISCA
+
+Substitua SOMENTE o conteudo dos dois arquivos em seu repositorio GitHub EggHop-Jogadores, na pasta EggHop-SITE-JOGADORES (1)/public:
+- app.js
+- access.js
+
+Abra cada arquivo no GitHub, clique no lapis, selecione todo o codigo antigo e cole o codigo correspondente deste pacote. Salve com Commit changes. Aguarde a Netlify publicar e recarregue usando Ctrl+Shift+R.
+
+Nao altere variaveis, funcoes do backend, cookies ou site Admin.
+
+O app.js deixa de mandar o visitante para o login ao receber erro de consulta de servidores. O access.js nao esconde o site por falha temporaria na verificacao. A verificacao de autorizacao no servidor continua obrigatoria.
+
+A consulta dos servidores reais depende de API Roblox e da sua funcao da Netlify. Essa correcao impede o ciclo de telas, mas pode nao resolver erros do Roblox.
