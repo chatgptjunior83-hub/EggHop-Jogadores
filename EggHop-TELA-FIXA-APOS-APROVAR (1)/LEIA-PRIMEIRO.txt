@@ -1,0 +1,18 @@
+EGGHOP - TELA FIXA APOS APROVACAO
+
+Altere SOMENTE o arquivo access.js do site dos jogadores:
+GitHub > EggHop-Jogadores > EggHop-SITE-JOGADORES (1) > public > access.js
+
+Cole o codigo do novo access.js e clique em Commit changes.
+Aguarde o Deploy da Netlify ficar Published.
+Confira em https://sitehopjogador.netlify.app/access.js
+Se aparecer a frase egghop-tela-fixa-1, a nova versao foi publicada.
+Depois atualize o site com Ctrl+Shift+R.
+
+Comportamento:
+- Ao abrir/recarregar a pagina, verifica a aprovacao pelo backend.
+- Uma vez aprovado, some a tela de verificacao ate atualizar a pagina.
+- Erro de busca de servidores nao volta a tela de entrada.
+- O backend continua exigindo autorizacao para consultar servidores.
+- Se o administrador revogar acesso, o backend deve recusar as consultas
+  imediatamente, mesmo que o painel ainda esteja visivel ate recarregar.
