@@ -1,0 +1,19 @@
+EGGHOP — CORREÇÃO DA BUSCA DE SERVIDORES
+
+Você já tem o site dos jogadores e a aprovação funcionando. Não mude senhas, variáveis ou site administrador.
+
+1. Abra o GitHub EggHop-Jogadores na branch main.
+2. Navegue até EggHop-SITE-JOGADORES (1)/public/
+3. Substitua APENAS o arquivo app.js pelo app.js que acompanha este pacote.
+4. Faça Commit changes e aguarde Published na Netlify.
+5. Abra https://sitehopjogador.netlify.app/ e atualize com Ctrl + Shift + R.
+6. Após aprovado, clique em Atualizar para tentar a consulta.
+
+DETALHE DA CORREÇÃO:
+No app.js original a consulta era feita em /api/servers. A função de backend implementa a rota / .netlify/functions/api?route=servers (sem o espaço). O novo app.js faz a chamada direta a essa função.
+
+Se ainda falhar, o problema pode ser da API do Roblox ou da própria função da Netlify. Abra no navegador, estando aprovado:
+https://sitehopjogador.netlify.app/.netlify/functions/api?route=servers
+A mensagem JSON exata indicará se o acesso foi negado, se o Roblox limitou consultas ou se houve outra falha.
+
+A entrada no servidor específico pelo Roblox depende de suporte do aplicativo e disponibilidade do servidor.
