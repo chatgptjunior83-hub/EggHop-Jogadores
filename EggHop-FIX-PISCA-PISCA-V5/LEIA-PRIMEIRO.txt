@@ -1,0 +1,28 @@
+EGGHOP - CORRECAO V5 - DUAS TELAS PISCANDO
+
+POR QUE PRECISA DOS DOIS ARQUIVOS?
+- app.js e o buscador de servidores. Erro 401/403 NA BUSCA nao pode chamar bloqueio da tela.
+- access.js controla aprovacoes. Erros temporarios nao devem fechar o acesso aprovado.
+- O backend da Netlify continua impedindo que alguem sem aprovacao consulte os servidores.
+
+NO GITHUB - NAO ENVIE A PASTA DO ZIP
+1. Entre em EggHop-Jogadores > EggHop-SITE-JOGADORES (1) > public
+2. Abra app.js -> lapis -> Ctrl+A -> cole o conteudo do NOVO app.js -> Commit changes
+3. Abra access.js -> lapis -> Ctrl+A -> cole o conteudo do NOVO access.js -> Commit changes
+4. Aguarde a Netlify ficar Published (2 novos commits).
+5. Abra https://sitehopjogador.netlify.app/app.js e confira 'egghop-fix-v5'.
+6. Abra https://sitehopjogador.netlify.app/access.js e confira 'egghop-fix-v5'.
+7. Se estiver nos DOIS, volte ao site e use Ctrl+Shift+R ou janela anonima.
+8. Teste por 1 minuto.
+
+NAO ALTERAR
+- A funcao netlify/functions/api.mjs, senhas, painel administrador e variaveis Netlify.
+- Nao criar novos diretorios de correcoes.
+
+Se a alternancia continuar MESMO com v5 nos dois arquivos, abra o console do navegador
+(F12 > Console), tire um print com erros e envie. Pode haver falha real de sessao/cookie
+ou deploy com backend diferente do usado na simulacao.
+
+A busca de servidores ainda pode falhar por causas proprias da API do Roblox;
+esta correcao elimina a interdependencia entre busca e acesso e nao promete
+que o Roblox esteja disponivel.
