@@ -7,7 +7,7 @@
   function message(t,ok=false){$('accessNotice').textContent=t;$('accessNotice').className='access-notice'+(ok?' good':'');}
   function unlocked(nick){$('accessGate').hidden=true;document.body.classList.remove('is-locked');$('accountBar').hidden=false;$('activeAccount').textContent=nick;window.eggHopUnlock?.();}
   function locked(){if(!document.body.classList.contains('is-locked'))window.eggHopClear?.();document.body.classList.add('is-locked');$('accessGate').hidden=false;$('accountBar').hidden=true;}
-  async function api(endpoint,opts={}){let res;try{res=await fetch('/.netlify/functions/api?route='+encodeURIComponent(endpoint)+endpoint,{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json',...(opts.body?{'Content-Type':'application/json'}:{})},...opts});}catch{throw Error('Sem conexão. Confira sua internet.');}
+  async function api(endpoint,opts={}){let res;try{res=await fetch('/.netlify/functions/api?route='+encodeURIComponent(endpoint),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json',...(opts.body?{'Content-Type':'application/json'}:{})},...opts});}catch{throw Error('Sem conexão. Confira sua internet.');}
     const data=await res.json().catch(()=>({}));if(!res.ok)throw Error(data.error||'Não foi possível consultar o serviço.');return data;}
   function draw(s){
     if(s.status==='approved'){if(lastStatus!=='approved')unlocked(s.nick);lastStatus='approved';return;}
