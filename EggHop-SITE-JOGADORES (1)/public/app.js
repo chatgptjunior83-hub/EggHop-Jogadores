@@ -1,5 +1,6 @@
 (() => {
   'use strict';
+  window.EGGHOP_APP_VERSION = 'egghop-fix-v5';
   const PLACE_ID = '107778070777162';
   const API_URL = '/.netlify/functions/api?route=servers';
   const $ = (id) => document.getElementById(id);
@@ -89,7 +90,7 @@
     try {
       const response=await fetch(`${API_URL}&${params.toString()}`,{signal:controller.signal,credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json'}});
       const body=await response.json().catch(()=>({}));
-      if(response.status === 401 || response.status === 403) { throw new Error(body.error || 'A consulta aos servidores foi recusada. Seu acesso ao site continuará sendo verificado separadamente.'); }
+      if(response.status === 401 || response.status === 403) { throw new Error(body.error || 'A consulta aos servidores foi recusada. Aguarde ou fale com o administrador.'); }
       if(!response.ok){throw new Error(body.error||`Não foi possível consultar o Roblox (${response.status}).`);}
       if(!Array.isArray(body.data))throw new Error('Resposta inesperada da consulta de servidores.');
       for(const item of body.data){
