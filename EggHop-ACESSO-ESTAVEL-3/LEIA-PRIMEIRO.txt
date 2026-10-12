@@ -1,0 +1,16 @@
+EGGHOP — CORREÇÃO 3.0 (SÓ O ACCESS.JS)
+
+Problema: site alterna rapidamente entre "Acesso aprovado" e "Verificando acesso".
+
+1. GitHub > EggHop-Jogadores > EggHop-SITE-JOGADORES (1) > public > access.js
+2. Clique no lápis, selecione TODO o código do access.js (Ctrl+A) e cole o código deste arquivo access.js.
+3. Commit changes. Não delete a pasta nem mexa no app.js ou API.
+4. Aguarde o último deploy "Published" na Netlify.
+5. No navegador abra https://sitehopjogador.netlify.app/access.js e procure "acesso-estavel-3.0".
+6. Se estiver lá, pressione Ctrl+Shift+R no site e observe por 30 segundos.
+
+O código só retira uma tela aprovada quando o servidor informa bloqueio/pendência ou confirma duas vezes perda da sessão.
+Erros momentâneos não fecham o Server Hop. O backend continua verificando a autorização das consultas.
+
+Se não parar, envie o resultado do link /access.js e o erro exato da aba Network / Console do navegador.
+A busca de servidores Roblox é um problema separado e ainda precisa de verificação.
