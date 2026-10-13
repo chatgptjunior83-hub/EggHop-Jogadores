@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  window.EGGHOP_APP_VERSION = 'egghop-fix-v5';
+  window.EGGHOP_APP_VERSION = 'TELA-FIXA-V6';
   const PLACE_ID = '107778070777162';
   const API_URL = '/.netlify/functions/api?route=servers';
   const $ = (id) => document.getElementById(id);
